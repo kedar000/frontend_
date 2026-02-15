@@ -11,6 +11,7 @@ const Signup = () => {
     password: "",
   });
 
+  const [isAdmin, setIsAdmin] = useState(false);
   const [error, setError] = useState("");
 
   const handleSignup = async (e) => {
@@ -18,7 +19,11 @@ const Signup = () => {
     setError("");
 
     try {
-      await api.post("/auth/register", form);
+      const endpoint = isAdmin
+        ? "/auth/register-admin"
+        : "/auth/register";
+
+      await api.post(endpoint, form);
       navigate("/");
     } catch (err) {
       setError("Registration failed");
@@ -28,6 +33,7 @@ const Signup = () => {
   return (
     <div className="h-screen flex items-center justify-center bg-background">
       <div className="bg-white shadow-lg rounded-xl p-10 w-[400px]">
+
         <h2 className="text-2xl font-bold text-primary text-center mb-6">
           Create Account
         </h2>
@@ -39,6 +45,7 @@ const Signup = () => {
         )}
 
         <form onSubmit={handleSignup} className="space-y-4">
+
           <input
             type="text"
             placeholder="Name"
@@ -72,6 +79,15 @@ const Signup = () => {
             required
           />
 
+          <div className="flex items-center gap-2 text-sm">
+            <input
+              type="checkbox"
+              checked={isAdmin}
+              onChange={() => setIsAdmin(!isAdmin)}
+            />
+            <span>Register as Admin</span>
+          </div>
+
           <button
             type="submit"
             className="w-full bg-primary text-white py-3 rounded-md hover:bg-secondary transition"
@@ -86,6 +102,7 @@ const Signup = () => {
             Login
           </Link>
         </p>
+
       </div>
     </div>
   );

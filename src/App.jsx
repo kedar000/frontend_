@@ -1,8 +1,10 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import Login from "./pages/Login"
-import Signup from "./pages/Singup"
-// import Dashboard from "./pages/Dashboard";
-// import Admin from "./pages/Admin";
+import Login from "./pages/Login";
+import Signup from "./pages/Singup";
+
+import Dashboard from "./pages/Dashboard"
+import Admin from "./pages/Admin"
+import ProtectedRoute from "./components/ProtectedRoute";
 
 function App() {
   return (
@@ -10,8 +12,24 @@ function App() {
       <Routes>
         <Route path="/" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
-        {/* <Route path="/dashboard" element={<Dashboard />} /> */}
-        {/* <Route path="/admin" element={<Admin />} /> */}
+
+        <Route
+          path="/dashboard"
+          element={
+            <ProtectedRoute>
+              <Dashboard />
+            </ProtectedRoute>
+          }
+        /> 
+
+        <Route
+          path="/admin"
+          element={
+            <ProtectedRoute role="ROLE_ADMIN">
+              <Admin />
+            </ProtectedRoute>
+          }
+        /> 
       </Routes>
     </BrowserRouter>
   );
