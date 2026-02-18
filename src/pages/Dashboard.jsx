@@ -1,74 +1,68 @@
 import { useState } from "react";
-import Navbar from "../components/Navbar";
 import api from "../services/api";
 
-const Dashboard = () => {
+function Dashboard() {
   const [file, setFile] = useState(null);
   const [message, setMessage] = useState("");
   const [isError, setIsError] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [errorFileBlob, setErrorFileBlob] = useState(null);
+
+  const handleFileChange = (e) => {
+    setFile(e.target.files[0]);
+  };
+
+  const handleDrop = (e) => {
+    e.preventDefault();
+    setFile(e.dataTransfer.files[0]);
+  };
+
+  const handleDragOver = (e) => {
+    e.preventDefault();
+  };
 
   const handleUpload = async () => {
-    if (!file) {
-      setMessage("Please select a file first.");
-      setIsError(true);
-      return;
-    }
+    if (!file) return;
+
+    setLoading(true);
+    setMessage("");
+    setIsError(false);
+    setErrorFileBlob(null);
 
     const formData = new FormData();
     formData.append("file", file);
 
-    setLoading(true);
-    setMessage("");
-
     try {
-      const response = await api.post(
-        "/api/files/validate",
-        formData,
-        {
-          headers: {
-            "Content-Type": "multipart/form-data",
-          },
-          responseType: "blob",
-        }
-      );
+      const response = await api.post("/api/files/validate", formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+        responseType: "blob",
+      });
 
       const contentType = response.headers["content-type"];
       const serverMessage = response.headers["x-message"];
 
-      // 🟥 Case: Excel returned → validation errors
+      // Excel returned -> validation errors
       if (
         contentType &&
         contentType.includes(
           "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
         )
       ) {
-        const blob = new Blob([response.data]);
-        const url = window.URL.createObjectURL(blob);
-
-        const link = document.createElement("a");
-        link.href = url;
-        link.download = "validation_errors.xlsx";
-        document.body.appendChild(link);
-        link.click();
-        link.remove();
-
+        setErrorFileBlob(response.data);
         setMessage(
           serverMessage ||
-            "Validation failed. Error file downloaded."
+            "There are some errors in your file. Please download the error file, correct the data, and re-upload."
         );
         setIsError(true);
-      } 
-      // 🟩 Case: Plain text returned → success OR corrupted message
-      else {
+      } else {
+        // Plain message success
         const text = await response.data.text();
         setMessage(text);
-
-        // Success if status is 200 and not an excel file
         setIsError(false);
       }
-
-    } catch (err) {
+    } catch (error) {
       setMessage("Something went wrong.");
       setIsError(true);
     }
@@ -76,52 +70,95 @@ const Dashboard = () => {
     setLoading(false);
   };
 
+  const handleDownloadErrorFile = () => {
+    if (!errorFileBlob) return;
+
+    const blob = new Blob([errorFileBlob]);
+    const url = window.URL.createObjectURL(blob);
+
+    const now = new Date();
+    const timestamp = now
+      .toISOString()
+      .replace(/[:.]/g, "-")
+      .slice(0, 19);
+
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `validation_error_${timestamp}.xlsx`;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+  };
+
   return (
-    <div className="min-h-screen bg-background">
-      <Navbar />
+    <div className="max-w-3xl mx-auto">
 
-      <div className="flex justify-center mt-16">
-        <div className="bg-white w-[600px] p-10 rounded-xl shadow-md transition-all duration-200">
+      <h1 className="text-3xl font-semibold text-[#003865] mb-8">
+        Upload Excel File
+      </h1>
 
-          <h2 className="text-xl font-semibold text-primary mb-6 text-center">
-            Upload Excel File
-          </h2>
+      <div
+        onDrop={handleDrop}
+        onDragOver={handleDragOver}
+        className="bg-white p-10 rounded-2xl shadow-lg border-2 border-dashed border-gray-300 hover:border-[#009de0] transition-all duration-300"
+      >
+        <div className="text-center space-y-4">
 
-          <div className="border-2 border-dashed border-borderLight p-10 rounded-lg text-center hover:border-secondary transition-all duration-200">
+          <p className="text-gray-500">
+            Drag & drop your Excel file here
+          </p>
 
-            <input
-              type="file"
-              accept=".xlsx"
-              onChange={(e) => setFile(e.target.files[0])}
-              className="mb-4"
-            />
+          <p className="text-sm text-gray-400">
+            or
+          </p>
 
-            <button
-              onClick={handleUpload}
-              disabled={loading}
-              className="bg-primary text-white px-6 py-2 rounded-md hover:bg-secondary transition-all duration-200"
-            >
-              {loading ? "Validating..." : "Validate & Upload"}
-            </button>
+          <input
+            type="file"
+            accept=".xlsx"
+            onChange={handleFileChange}
+            className="mx-auto block"
+          />
 
-          </div>
-
-          {message && (
-            <div
-              className={`mt-6 p-4 rounded-md text-sm ${
-                isError
-                  ? "bg-red-100 text-red-700"
-                  : "bg-green-100 text-green-700"
-              }`}
-            >
-              {message}
-            </div>
+          {file && (
+            <p className="text-[#009de0] font-medium">
+              {file.name}
+            </p>
           )}
+
+          <button
+            onClick={handleUpload}
+            disabled={loading}
+            className="mt-4 bg-[#003865] hover:bg-[#0055a4] text-white px-6 py-2 rounded-lg transition-all duration-300"
+          >
+            {loading ? "Validating..." : "Validate & Upload"}
+          </button>
 
         </div>
       </div>
+
+      {message && (
+        <div
+          className={`mt-6 p-6 rounded-xl transition-all duration-300 ${
+            isError
+              ? "bg-red-50 border-l-4 border-red-500 text-red-700"
+              : "bg-green-50 border-l-4 border-green-500 text-green-700"
+          }`}
+        >
+          <p className="font-medium">{message}</p>
+
+          {errorFileBlob && (
+            <button
+              onClick={handleDownloadErrorFile}
+              className="mt-4 bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg transition-all duration-200"
+            >
+              Download Error File
+            </button>
+          )}
+        </div>
+      )}
+
     </div>
   );
-};
+}
 
 export default Dashboard;

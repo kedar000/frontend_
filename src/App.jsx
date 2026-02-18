@@ -1,37 +1,30 @@
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import Login from "./pages/Login";
-import Signup from "./pages/Singup";
-
-import Dashboard from "./pages/Dashboard"
-import Admin from "./pages/Admin"
-import ProtectedRoute from "./components/ProtectedRoute";
+import Signup from "./pages/Signup";
+import Dashboard from "./pages/Dashboard";
+import Admin from "./pages/Admin";
+import ProtectedRoutes from "./components/ProtectedRoutes";
+import SidebarLayout from "./components/SidebarLayout";
 
 function App() {
   return (
-    <BrowserRouter>
+    <Router>
       <Routes>
+
+        {/* Public Routes */}
         <Route path="/" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
 
-        <Route
-          path="/dashboard"
-          element={
-            <ProtectedRoute>
-              <Dashboard />
-            </ProtectedRoute>
-          }
-        /> 
+        {/* Protected Routes */}
+        <Route element={<ProtectedRoutes />}>
+          <Route element={<SidebarLayout />}>
+            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/admin" element={<Admin />} />
+          </Route>
+        </Route>
 
-        <Route
-          path="/admin"
-          element={
-            <ProtectedRoute role="ROLE_ADMIN">
-              <Admin />
-            </ProtectedRoute>
-          }
-        /> 
       </Routes>
-    </BrowserRouter>
+    </Router>
   );
 }
 
