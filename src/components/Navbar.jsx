@@ -11,19 +11,21 @@ const Navbar = () => {
   };
 
   return (
-    <div className="bg-white border-b border-borderLight px-8 py-4 flex justify-between items-center">
+    <div className="bg-[#033967] px-8 py-4 flex justify-between items-center shadow-sm">
 
+      {/* Logo / Title */}
       <h1
-        className="text-primary font-bold text-lg cursor-pointer"
+        className="text-white font-semibold text-lg tracking-wide cursor-pointer hover:opacity-90 transition"
         onClick={() => navigate("/dashboard")}
       >
         Validation Portal
       </h1>
 
-      <div className="flex items-center gap-6">
+      {/* Right Side Navigation */}
+      <div className="flex items-center gap-8">
 
         <button
-          className="text-gray-700 hover:text-secondary transition"
+          className="text-white/90 hover:text-white transition text-sm font-medium"
           onClick={() => navigate("/dashboard")}
         >
           Dashboard
@@ -31,7 +33,7 @@ const Navbar = () => {
 
         {role === "ROLE_ADMIN" && (
           <button
-            className="text-gray-700 hover:text-secondary transition"
+            className="text-white/90 hover:text-white transition text-sm font-medium"
             onClick={() => navigate("/admin")}
           >
             Admin Panel
@@ -39,7 +41,7 @@ const Navbar = () => {
         )}
 
         <button
-          className="bg-primary text-white px-4 py-2 rounded-md hover:bg-secondary transition"
+          className="bg-white text-[#033967] px-4 py-2 rounded-md text-sm font-medium hover:bg-gray-100 transition"
           onClick={handleLogout}
         >
           Logout
